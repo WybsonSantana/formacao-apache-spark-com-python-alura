@@ -1,3 +1,7 @@
+# Data files
+**/data/**
+!**/data/data_sources.yml
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

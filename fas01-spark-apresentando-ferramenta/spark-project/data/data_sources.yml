@@ -1,0 +1,8 @@
+data:
+  input:
+    empresas:
+      url: "https://caelum-online-public.s3.amazonaws.com/2273-introducao-spark/01/empresas.zip"
+    estabelecimentos:
+      url: "https://caelum-online-public.s3.amazonaws.com/2273-introducao-spark/01/estabelecimentos.zip"
+    sócios:
+      url: "https://caelum-online-public.s3.amazonaws.com/2273-introducao-spark/01/socios.zip"
