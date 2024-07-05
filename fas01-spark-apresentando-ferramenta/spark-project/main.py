@@ -1,6 +1,8 @@
 import gc
+
 import findspark
-from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession, functions
+from pyspark.sql.types import DoubleType
 
 
 def inicializar_spark():
@@ -8,7 +10,9 @@ def inicializar_spark():
 
 
 def criar_spark_session():
-    return SparkSession.builder.master('local[*]').getOrCreate()
+    return (SparkSession.builder.master('local[*]')
+            .config('spark.sql.debug.maxToStringFields', '100')
+            .getOrCreate())
 
 
 def criar_data_frame_lendo_csv(spark_session, path):
@@ -30,6 +34,14 @@ def processar_dados(spark_session, path, nomes_colunas):
     data_frame = renomear_colunas_do_data_frame(data_frame, nomes_colunas)
     data_frame.show(3, truncate=False)
     return data_frame
+
+
+def converter_separador_decimal(data_frame, nome_coluna):
+    return data_frame.withColumn(f'{nome_coluna}', functions.regexp_replace(f'{nome_coluna}', ',', '.'))
+
+
+def converter_tipo_coluna_para_double(data_frame, nome_coluna):
+    return data_frame.withColumn(f'{nome_coluna}', data_frame[f'{nome_coluna}'].cast(DoubleType()))
 
 
 def formatar_separador_de_milhar(numero):
@@ -61,6 +73,10 @@ def main():
 
     print('processando dados de empresas...')
     df_empresas = processar_dados(spark, uri_empresas, colunas_empresas)
+    df_empresas = converter_separador_decimal(df_empresas, 'capital_social_da_empresa')
+    df_empresas = converter_tipo_coluna_para_double(df_empresas, 'capital_social_da_empresa')
+    df_empresas.show(3, truncate=False)
+    df_empresas.printSchema()
 
     print('Processando dados de estabelecimentos...')
     df_estabelecimentos = processar_dados(spark, uri_estabelecimentos, colunas_estabelecimentos)
