@@ -28,7 +28,7 @@ def processar_dados(spark_session, path, nomes_colunas):
     quantidade_de_registros_carregados = data_frame.count()
     print(f'Quantidade de registros carregados: {formatar_separador_de_milhar(quantidade_de_registros_carregados)}')
     data_frame = renomear_colunas_do_data_frame(data_frame, nomes_colunas)
-    data_frame.show(3, truncate=False)
+    # data_frame.show(3, truncate=False)
     return data_frame
 
 
@@ -79,22 +79,28 @@ def main():
     df_empresas = processar_dados(spark, uri_empresas, colunas_empresas)
     df_empresas = converter_separador_decimal(df_empresas, 'capital_social_da_empresa')
     df_empresas = converter_tipo_coluna_para_double(df_empresas, 'capital_social_da_empresa')
-    df_empresas.printSchema()
-    df_empresas.show(3, truncate=False)
+    (df_empresas
+     .select('natureza_juridica', 'porte_da_empresa', 'capital_social_da_empresa')
+     .show(3, truncate=False))
 
     print('Processando dados de estabelecimentos...')
     df_estabelecimentos = processar_dados(spark, uri_estabelecimentos, colunas_estabelecimentos)
     df_estabelecimentos = converter_tipo_coluna_para_date(df_estabelecimentos, 'data_situacao_cadastral')
     df_estabelecimentos = converter_tipo_coluna_para_date(df_estabelecimentos, 'data_de_inicio_atividade')
     df_estabelecimentos = converter_tipo_coluna_para_date(df_estabelecimentos, 'data_da_situacao_especial')
-    df_estabelecimentos.printSchema()
-    df_estabelecimentos.show(3, truncate=False)
+    (df_estabelecimentos
+     .select('nome_fantasia', 'municipio',
+             functions.year('data_de_inicio_atividade').alias('ano_de_inicio_atividade'),
+             functions.month('data_de_inicio_atividade').alias('mes_de_inicio_atividade'))
+     .show(3, truncate=False))
 
     print('Processando dados de sócios...')
     df_socios = processar_dados(spark, uri_socios, colunas_socios)
     df_socios = converter_tipo_coluna_para_date(df_socios, 'data_de_entrada_sociedade')
-    df_socios.printSchema()
-    df_socios.show(3, truncate=False)
+    (df_socios
+     .select('nome_do_socio_ou_razao_social', 'faixa_etaria',
+             functions.year('data_de_entrada_sociedade').alias('ano_de_entrada'))
+     .show(3, truncate=False))
 
     spark.stop()
 
