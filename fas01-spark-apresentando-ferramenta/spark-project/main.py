@@ -1,8 +1,6 @@
-import gc
-
 import findspark
 from pyspark.sql import SparkSession, functions
-from pyspark.sql.types import DoubleType
+from pyspark.sql.types import DoubleType, StringType
 
 
 def inicializar_spark():
@@ -16,9 +14,7 @@ def criar_spark_session():
 
 
 def criar_data_frame_lendo_csv(spark_session, path):
-    data_frame = spark_session.read.csv(path, inferSchema=True, sep=';', quote='"', escape='"', encoding='UTF-8')
-    gc.collect()
-    return data_frame
+    return spark_session.read.csv(path, inferSchema=True, sep=';', quote='"', escape='"', encoding='UTF-8')
 
 
 def renomear_colunas_do_data_frame(data_frame, nomes_colunas):
@@ -37,11 +33,19 @@ def processar_dados(spark_session, path, nomes_colunas):
 
 
 def converter_separador_decimal(data_frame, nome_coluna):
+    print(f'Convertendo separador decimal da coluna {nome_coluna}...')
     return data_frame.withColumn(f'{nome_coluna}', functions.regexp_replace(f'{nome_coluna}', ',', '.'))
 
 
 def converter_tipo_coluna_para_double(data_frame, nome_coluna):
+    print(f'Convertendo tipo da coluna {nome_coluna} para double...')
     return data_frame.withColumn(f'{nome_coluna}', data_frame[f'{nome_coluna}'].cast(DoubleType()))
+
+
+def converter_tipo_coluna_para_date(data_frame, nome_coluna):
+    print(f'Convertendo tipo da coluna {nome_coluna} para date...')
+    return data_frame.withColumn(f'{nome_coluna}',
+                                 functions.to_date(data_frame[f'{nome_coluna}'].cast(StringType()), 'yyyyMMdd'))
 
 
 def formatar_separador_de_milhar(numero):
@@ -75,14 +79,22 @@ def main():
     df_empresas = processar_dados(spark, uri_empresas, colunas_empresas)
     df_empresas = converter_separador_decimal(df_empresas, 'capital_social_da_empresa')
     df_empresas = converter_tipo_coluna_para_double(df_empresas, 'capital_social_da_empresa')
-    df_empresas.show(3, truncate=False)
     df_empresas.printSchema()
+    df_empresas.show(3, truncate=False)
 
     print('Processando dados de estabelecimentos...')
     df_estabelecimentos = processar_dados(spark, uri_estabelecimentos, colunas_estabelecimentos)
+    df_estabelecimentos = converter_tipo_coluna_para_date(df_estabelecimentos, 'data_situacao_cadastral')
+    df_estabelecimentos = converter_tipo_coluna_para_date(df_estabelecimentos, 'data_de_inicio_atividade')
+    df_estabelecimentos = converter_tipo_coluna_para_date(df_estabelecimentos, 'data_da_situacao_especial')
+    df_estabelecimentos.printSchema()
+    df_estabelecimentos.show(3, truncate=False)
 
     print('Processando dados de sócios...')
     df_socios = processar_dados(spark, uri_socios, colunas_socios)
+    df_socios = converter_tipo_coluna_para_date(df_socios, 'data_de_entrada_sociedade')
+    df_socios.printSchema()
+    df_socios.show(3, truncate=False)
 
     spark.stop()
 
