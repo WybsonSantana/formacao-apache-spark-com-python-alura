@@ -85,6 +85,10 @@ def main():
      .select('natureza_juridica', 'porte_da_empresa', 'capital_social_da_empresa')
      .show(3, truncate=False))
 
+    (df_empresas
+     .where('capital_social_da_empresa == 50')
+     .show(3, truncate=False))
+
     # Trabalhando com o Data Frame de estabelecimentos
     print('Processando dados de estabelecimentos...')
     df_estabelecimentos = processar_dados(spark, uri_estabelecimentos, colunas_estabelecimentos)
@@ -115,6 +119,12 @@ def main():
      .select('nome_do_socio_ou_razao_social', 'faixa_etaria',
              functions.year('data_de_entrada_sociedade').alias('ano_de_entrada'))
      .orderBy(['ano_de_entrada', 'faixa_etaria'], ascending=False)
+     .show(3, truncate=False))
+
+    (df_socios
+     .select('nome_do_socio_ou_razao_social')
+     .filter(df_socios['nome_do_socio_ou_razao_social'].startswith('LORENA'))
+     .filter(df_socios['nome_do_socio_ou_razao_social'].endswith('DIAS'))
      .show(3, truncate=False))
 
     spark.stop()
