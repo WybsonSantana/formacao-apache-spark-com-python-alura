@@ -111,6 +111,12 @@ def main():
     df_socios.select([functions.count(functions.when(functions.isnull(column), 1)).alias(column)
                       for column in df_socios.columns]).show()
 
+    (df_socios
+     .select('nome_do_socio_ou_razao_social', 'faixa_etaria',
+             functions.year('data_de_entrada_sociedade').alias('ano_de_entrada'))
+     .orderBy(['ano_de_entrada', 'faixa_etaria'], ascending=False)
+     .show(3, truncate=False))
+
     spark.stop()
 
 
