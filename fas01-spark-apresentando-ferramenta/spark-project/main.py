@@ -94,6 +94,19 @@ def main():
      .filter(functions.upper(df_empresas['razao_social_nome_empresarial']).like('%RESTAURANTE%'))
      .show(3, truncate=False))
 
+    (df_empresas
+     .select('cnpj_basico', 'porte_da_empresa', 'capital_social_da_empresa')
+     .groupBy('porte_da_empresa')
+     .agg(functions.avg('capital_social_da_empresa').alias('capital_social_medio'),
+          functions.count('cnpj_basico').alias('frequencia'))
+     .orderBy('porte_da_empresa', ascending=True)
+     .show())
+
+    (df_empresas
+     .select('capital_social_da_empresa')
+     .summary()
+     .show())
+
     # Trabalhando com o Data Frame de estabelecimentos
     print('Processando dados de estabelecimentos...')
     df_estabelecimentos = processar_dados(spark, uri_estabelecimentos, colunas_estabelecimentos)
@@ -131,6 +144,14 @@ def main():
      .filter(df_socios['nome_do_socio_ou_razao_social'].startswith('LORENA'))
      .filter(df_socios['nome_do_socio_ou_razao_social'].endswith('DIAS'))
      .show(3, truncate=False))
+
+    (df_socios
+     .select(functions.year('data_de_entrada_sociedade').alias('ano_de_entrada'))
+     .where('ano_de_entrada >= 2010')
+     .groupBy('ano_de_entrada')
+     .count()
+     .orderBy('ano_de_entrada', ascending=True)
+     .show())
 
     spark.stop()
 
