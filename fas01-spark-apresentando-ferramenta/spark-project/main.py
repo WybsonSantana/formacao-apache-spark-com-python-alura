@@ -89,6 +89,11 @@ def main():
      .where('capital_social_da_empresa == 50')
      .show(3, truncate=False))
 
+    (df_empresas
+     .select('razao_social_nome_empresarial', 'natureza_juridica', 'porte_da_empresa', 'capital_social_da_empresa')
+     .filter(functions.upper(df_empresas['razao_social_nome_empresarial']).like('%RESTAURANTE%'))
+     .show(3, truncate=False))
+
     # Trabalhando com o Data Frame de estabelecimentos
     print('Processando dados de estabelecimentos...')
     df_estabelecimentos = processar_dados(spark, uri_estabelecimentos, colunas_estabelecimentos)
