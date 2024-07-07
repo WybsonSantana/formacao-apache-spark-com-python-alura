@@ -153,6 +153,24 @@ def main():
      .orderBy('ano_de_entrada', ascending=True)
      .show())
 
+    # Trabalhando com junção de Data Frames
+    df_estabelecimentos_join_empresas = df_estabelecimentos.join(df_empresas, 'cnpj_basico', how='inner')
+    df_estabelecimentos_join_empresas.printSchema()
+
+    df_frequencia = (df_estabelecimentos_join_empresas
+                     .select('cnpj_basico', functions.year('data_de_inicio_atividade').alias('data_de_inicio'))
+                     .where('data_de_inicio >= 2010')
+                     .groupBy('data_de_inicio')
+                     .agg(functions.count('cnpj_basico').alias('frequencia'))
+                     .orderBy('data_de_inicio', ascending=True))
+
+    df_frequencia.show()
+
+    (df_frequencia.union(df_frequencia.select(
+        functions.lit('Total').alias('data_de_inicio'),
+        functions.sum(df_frequencia['frequencia']).alias('frequencia')
+    )).show())
+
     spark.stop()
 
 
