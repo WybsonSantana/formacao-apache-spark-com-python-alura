@@ -171,6 +171,43 @@ def main():
         functions.sum(df_frequencia['frequencia']).alias('frequencia')
     )).show())
 
+    # Trabalhando com consultas SQL padrão
+    df_empresas.createOrReplaceTempView('df_empresas_view')
+
+    spark.sql('SELECT * FROM df_empresas_view').show(3, truncate=False)
+
+    spark.sql("""
+        SELECT * FROM df_empresas_view
+        WHERE capital_social_da_empresa = 50
+    """).show(3, truncate=False)
+
+    spark.sql("""
+        SELECT porte_da_empresa, MEAN(capital_social_da_empresa) as Media
+        FROM df_empresas_view
+        GROUP BY porte_da_empresa
+    """).show(3, truncate=False)
+
+    df_estabelecimentos_join_empresas.createOrReplaceTempView('df_estabelecimentos_join_empresas_view')
+
+    df_frequencia = spark.sql("""
+        SELECT YEAR(data_de_inicio_atividade) AS data_de_inicio, COUNT(cnpj_basico) AS count
+        FROM df_estabelecimentos_join_empresas_view
+        WHERE YEAR(data_de_inicio_atividade) >= 2010
+        GROUP BY data_de_inicio
+        ORDER BY data_de_inicio
+    """)
+
+    df_frequencia.show()
+
+    df_frequencia.createOrReplaceTempView('df_frequencia_view')
+
+    spark.sql("""
+        SELECT * FROM df_frequencia_view
+        UNION ALL
+        SELECT 'Total' AS data_de_inicio, SUM(count) AS count
+        FROM df_frequencia_view 
+    """).show()
+
     spark.stop()
 
 
