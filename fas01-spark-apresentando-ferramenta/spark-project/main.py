@@ -81,6 +81,13 @@ def main():
     df_empresas = converter_separador_decimal(df_empresas, 'capital_social_da_empresa')
     df_empresas = converter_tipo_coluna_para_double(df_empresas, 'capital_social_da_empresa')
 
+    df_empresas.write.csv(
+        path='./data/output/empresas/csv',
+        mode='overwrite',
+        sep=';',
+        header=True
+    )
+
     (df_empresas
      .select('natureza_juridica', 'porte_da_empresa', 'capital_social_da_empresa')
      .show(3, truncate=False))
@@ -114,6 +121,13 @@ def main():
     df_estabelecimentos = converter_tipo_coluna_para_date(df_estabelecimentos, 'data_de_inicio_atividade')
     df_estabelecimentos = converter_tipo_coluna_para_date(df_estabelecimentos, 'data_da_situacao_especial')
 
+    df_estabelecimentos.write.csv(
+        path='./data/output/estabelecimentos/csv',
+        mode='overwrite',
+        sep=';',
+        header=True
+    )
+
     (df_estabelecimentos
      .select('nome_fantasia', 'municipio',
              functions.year('data_de_inicio_atividade').alias('ano_de_inicio_atividade'),
@@ -124,6 +138,13 @@ def main():
     print('Processando dados de sócios...')
     df_socios = processar_dados(spark, uri_socios, colunas_socios)
     df_socios = converter_tipo_coluna_para_date(df_socios, 'data_de_entrada_sociedade')
+
+    df_socios.write.csv(
+        path='./data/output/socios/csv',
+        mode='overwrite',
+        sep=';',
+        header=True
+    )
 
     (df_socios
      .select('nome_do_socio_ou_razao_social', 'faixa_etaria',
