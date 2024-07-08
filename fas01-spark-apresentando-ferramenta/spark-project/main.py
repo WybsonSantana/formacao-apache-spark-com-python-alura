@@ -10,6 +10,11 @@ def inicializar_spark():
 def criar_spark_session():
     return (SparkSession.builder.master('local[*]')
             .config('spark.sql.debug.maxToStringFields', '100')
+            .config('spark.executor.memory', '2g')
+            .config('spark.executor.memoryOverhead', '2g')
+            .config('spark.driver.memory', '2g')
+            .config('spark.eventLog.gcMetrics.youngGenerationGarbageCollectors', 'G1 Young Generation')
+            .config('spark.eventLog.gcMetrics.oldGenerationGarbageCollectors', 'G1 Old Generation')
             .getOrCreate())
 
 
@@ -56,6 +61,9 @@ def main():
     inicializar_spark()
     spark = criar_spark_session()
 
+    # Configuração para lidar com datas e timestamps antigos ao escrever arquivos Parquet
+    spark.conf.set("spark.sql.parquet.datetimeRebaseModeInWrite", "LEGACY")
+
     uri_empresas = 'data/input/empresas/*.csv'
     colunas_empresas = ['cnpj_basico', 'razao_social_nome_empresarial', 'natureza_juridica',
                         'qualificacao_do_responsavel', 'capital_social_da_empresa', 'porte_da_empresa',
@@ -86,6 +94,11 @@ def main():
         mode='overwrite',
         sep=';',
         header=True
+    )
+
+    df_empresas.write.parquet(
+        path='./data/output/empresas/parquet',
+        mode='overwrite'
     )
 
     (df_empresas
@@ -128,6 +141,11 @@ def main():
         header=True
     )
 
+    df_estabelecimentos.write.parquet(
+        path='./data/output/estabelecimentos/parquet',
+        mode='overwrite'
+    )
+
     (df_estabelecimentos
      .select('nome_fantasia', 'municipio',
              functions.year('data_de_inicio_atividade').alias('ano_de_inicio_atividade'),
@@ -144,6 +162,11 @@ def main():
         mode='overwrite',
         sep=';',
         header=True
+    )
+
+    df_socios.write.parquet(
+        path='./data/output/socios/parquet',
+        mode='overwrite'
     )
 
     (df_socios
